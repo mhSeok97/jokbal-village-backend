@@ -28,6 +28,7 @@
 | POST   | `/api/users/login`    | 로그인 (JWT 발급) |
 | POST   | `/api/users/logout`   | 로그아웃 |
 | GET    | `/api/users/profile`  | 본인 정보 조회 (JWT 필요) |
+| DELETE    | `/api/users/delete`  | 회원 탈퇴 (JWT 필요) |
 
 ### 게시판(Board)
 | Method | Endpoint           | 설명 |
