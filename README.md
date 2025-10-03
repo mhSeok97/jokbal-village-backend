@@ -48,3 +48,15 @@
 | POST   | `/api/posts`          | 게시글/리뷰 작성 (JWT 필요) |
 | PUT    | `/api/posts/:id`      | 게시글/리뷰 수정 (본인 작성만) |
 | DELETE | `/api/posts/:id`      | 게시글/리뷰 삭제 (본인 작성만) |
+
+
+## 4️⃣ **환경 변수 정의**
+```bash
+# .env
+PORT=5000
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+JWT_SECRET=
+```
