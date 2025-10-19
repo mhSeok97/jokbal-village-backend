@@ -1,26 +1,13 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
 
-export const protect = async (req, res, next) => {
-  let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findByPk(decoded.id); // Sequelize 기준
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: '토큰 인증 실패' });
-    }
-  } else {
-    return res.status(401).json({ message: '토큰이 없음' });
-  }
-};
+export const verifyToken = (req, res, next) => {
+  const header = req.headers['authorization'];
+  const token = header && header.split(' ')[1];
+  if (!token) return res.status(401).json({ message: '토큰 없음' });
 
-export const admin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: '토큰 만료 또는 유효하지 않음' });
+    req.user = decoded;
     next();
-  } else {
-    res.status(403).json({ message: '관리자 권한이 필요합니다' });
-  }
+  });
 };
