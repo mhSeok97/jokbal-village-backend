@@ -1,7 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import sequelize from "./db"; // DB 연결 파일
+import sequelize from "db"; // DB 연결 파일
 // import userRoutes from "./routes/userRoutes";
 
 dotenv.config();

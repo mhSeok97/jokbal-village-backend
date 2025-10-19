@@ -5,8 +5,8 @@ import {
   deleteUser,
   registerUser,
   loginUser,
-} from "../api/user/controller/userController.js";
-import { protect, admin } from "../middleware/authMiddleware";
+} from "api/user/controller/userController.js";
+import { protect, admin } from "middleware/authMiddleware";
 
 const router = express.Router();
 

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import User from "../../../models/User";
+import User from "models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { RegisterUserDto, LoginUserDto } from "../dto/userDto";
+import { RegisterUserDto, LoginUserDto } from "api/user/dto/userDto";
 
 // 전체 사용자 조회 (관리자만)
 export const getAllUsers = async (req: Request, res: Response) => {
