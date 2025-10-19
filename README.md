@@ -10,7 +10,7 @@
 
   - Node.js + Express
 
-  - MongoDB Atlas
+  - AWS RDS(MySQL)
 
   - JWT 기반 인증
 
