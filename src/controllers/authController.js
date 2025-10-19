@@ -1,8 +1,8 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import RefreshToken from '../models/RefreshToken.js';
-import { Op } from 'sequelize';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import RefreshToken from "../models/RefreshToken.js";
+import { Op } from "sequelize";
 
 // 로그인
 export const login = async (req, res) => {
@@ -11,22 +11,18 @@ export const login = async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ message: '이메일 또는 비밀번호가 틀림' });
+      return res.status(401).json({ message: "이메일 또는 비밀번호가 틀림" });
     }
 
     // Access Token (짧게)
-    const accessToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
+    const accessToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
 
     // Refresh Token (길게)
-    const refreshToken = jwt.sign(
-      { id: user.id },
-      process.env.REFRESH_SECRET,
-      { expiresIn: '7d' }
-    );
+    const refreshToken = jwt.sign({ id: user.id }, process.env.REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
 
     // 기존 refresh token 삭제 (선택)
     await RefreshToken.destroy({

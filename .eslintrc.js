@@ -1,0 +1,46 @@
+module.exports = {
+  env: {
+    node: true,
+    es2021: true,
+  },
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
+  plugins: ["@typescript-eslint", "prettier"],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+  ],
+  rules: {
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    quotes: ["error", "single"],
+    "semi-spacing": ["error", { before: false, after: true }],
+    eqeqeq: ["error", "smart"],
+    "brace-style": ["error", "1tbs", { allowSingleLine: true }],
+    "keyword-spacing": ["error", { before: true, after: true }],
+    "space-before-blocks": ["error", "always"],
+    "object-curly-spacing": ["error", "always"],
+    "space-infix-ops": ["error"],
+    "comma-spacing": ["error", { before: false, after: true }],
+    "key-spacing": ["error", { beforeColon: false, afterColon: true }],
+    "space-in-parens": ["error", "never"],
+    "space-before-function-paren": [
+      "error",
+      {
+        named: "never",
+        anonymous: "always",
+        asyncArrow: "always",
+      },
+    ],
+    "spaced-comment": ["error", "always"],
+    "array-bracket-spacing": ["error", "never"],
+    "no-var": "error",
+    "arrow-spacing": ["error"],
+    "prettier/prettier": "error",
+  },
+  ignorePatterns: [".eslintrc.js", "node_modules/", "dist/"],
+};
