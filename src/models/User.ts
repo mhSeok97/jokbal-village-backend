@@ -1,20 +1,17 @@
-import { DataTypes, Model } from "sequelize";
-import sequelize from "db.js";
-import bcrypt from "bcryptjs";
-import { UserAttributes, UserCreationAttributes } from "types/user.js";
+import { DataTypes, Model } from 'sequelize'
+import sequelize from 'db'
+import bcrypt from 'bcryptjs'
+import { UserAttributes, UserCreationAttributes } from '@api/user/dto/user.dto'
 
-class User
-  extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes
-{
-  public id!: number;
-  public username!: string;
-  public email!: string;
-  public password!: string;
-  public isAdmin!: boolean;
+class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+  public id!: number
+  public username!: string
+  public email!: string
+  public password!: string
+  public isAdmin!: boolean
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  public readonly createdAt!: Date
+  public readonly updatedAt!: Date
 }
 
 User.init(
@@ -45,15 +42,21 @@ User.init(
   },
   {
     sequelize,
-    tableName: "users",
+    tableName: 'users',
     timestamps: true,
     hooks: {
       beforeCreate: async (user: User) => {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
+        const salt = await bcrypt.genSalt(10)
+        user.password = await bcrypt.hash(user.password, salt)
+      },
+      beforeUpdate: async (user: User) => {
+        if (user.changed('password')) {
+          const salt = await bcrypt.genSalt(10)
+          user.password = await bcrypt.hash(user.password, salt)
+        }
       },
     },
   },
-);
+)
 
-export default User;
+export default User

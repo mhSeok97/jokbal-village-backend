@@ -1,28 +1,28 @@
-import express, { Express } from "express";
-import dotenv from "dotenv";
-import userRoutes from "routes/userRoutes";
-import sequelize from "db";
+import express, { Express } from 'express'
+import dotenv from 'dotenv'
+import userRoutes from '@api/user/routes'
+import sequelize from 'db'
 
-dotenv.config();
+dotenv.config()
 
-const app: Express = express();
+const app: Express = express()
 
 // 미들웨어
-app.use(express.json());
+app.use(express.json())
 
 // 라우트
-app.use("/api/users", userRoutes);
+app.use('/api/users', userRoutes)
 
 // 서버 실행
-const PORT: number = parseInt(process.env.PORT || "5000", 10);
+const PORT: number = parseInt(process.env.PORT || '5000', 10)
 
 app.listen(PORT, async () => {
   try {
-    await sequelize.authenticate();
-    console.log("✅ DB 연결 성공");
+    await sequelize.authenticate()
+    console.log('✅ DB 연결 성공')
   } catch (error: any) {
-    console.log("❌ DB 연결 실패:", error.message);
+    console.log('❌ DB 연결 실패:', error.message)
   }
 
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+})

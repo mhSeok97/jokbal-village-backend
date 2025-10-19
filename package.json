@@ -3,10 +3,17 @@
   "version": "1.0.0",
   "description": "- 프로젝트명: 족발마을 웹 (Jokbal Village)",
   "main": "src/server.js",
+  "type": "commonjs",
+  "imports": {
+    "#middleware/*": "./src/middleware/*",
+    "#models/*": "./src/models/*",
+    "#api/*": "./src/api/*",
+    "#config/*": "./src/config/*"
+  },
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "start": "node src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "ts-node-dev --respawn --transpile-only --require tsconfig-paths/register src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +43,8 @@
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   }
 }
