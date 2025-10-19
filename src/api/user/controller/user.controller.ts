@@ -1,84 +1,73 @@
-import { Request, Response } from 'express'
-import User from '@models/User'
-import bcrypt from 'bcryptjs'
+import { JsonController, Get, Post, Delete, Param, Body, Authorized } from 'routing-controllers'
+import { UserService } from '@api/user/service/user.service'
+import { RegisterUserDto, LoginUserDto } from '../dto/user.dto'
+import { apiSuccess, apiFail } from '@api/common/dto/api-util.dto'
+import { Service } from 'typedi'
 import jwt from 'jsonwebtoken'
-import { RegisterUserDto, LoginUserDto, UserResponseDto } from '@api/user/dto/user.dto'
 
-// 전체 사용자 조회 (관리자만)
-export const getAllUsers = async (req: Request, res: Response<UserResponseDto[]>) => {
-  try {
-    const users = await User.findAll({ attributes: { exclude: ['password'] } })
-    res.json(users)
-  } catch (error: any) {
-    res.status(500).json({ message: error.message } as any)
+@Service()
+@JsonController('/users')
+export class UserController {
+  constructor(private userService: UserService) {}
+
+  // 전체 사용자 조회 (관리자만)
+  @Authorized('admin')
+  @Get('/')
+  async getAllUsers() {
+    try {
+      const users = await this.userService.findAllUsers()
+      return apiSuccess(users)
+    } catch (error: any) {
+      return apiFail('전체 사용자 조회 실패', error.message)
+    }
   }
-}
 
-// 특정 사용자 조회 (관리자만)
-export const getUserById = async (req: Request<{ id: string }, UserResponseDto, {}>, res: Response<UserResponseDto>) => {
-  try {
-    const user = await User.findByPk(Number(req.params.id), {
-      attributes: { exclude: ['password'] },
-    })
-    if (!user) return res.status(404).json({ message: '사용자 없음' } as any)
-    res.json(user)
-  } catch (error: any) {
-    res.status(500).json({ message: error.message } as any)
+  // 특정 사용자 조회 (관리자만)
+  @Authorized('admin')
+  @Get('/:id')
+  async getUserById(@Param('id') id: number) {
+    try {
+      const user = await this.userService.findUserById(id)
+      return apiSuccess(user)
+    } catch (error: any) {
+      return apiFail('사용자 조회 실패', error.message)
+    }
   }
-}
 
-// 사용자 삭제 (관리자만)
-export const deleteUser = async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const user = await User.findByPk(Number(req.params.id))
-    if (!user) return res.status(404).json({ message: '사용자 없음' })
-    await user.destroy()
-    res.json({ message: '사용자 삭제됨' })
-  } catch (error: any) {
-    res.status(500).json({ message: error.message })
+  // 사용자 삭제 (관리자만)
+  @Authorized('admin')
+  @Delete('/:id')
+  async deleteUser(@Param('id') id: number) {
+    try {
+      await this.userService.deleteUser(id)
+      return apiSuccess({ message: '사용자 삭제됨' })
+    } catch (error: any) {
+      return apiFail('사용자 삭제 실패', error.message)
+    }
   }
-}
 
-// 회원가입
-export const registerUser = async (req: Request<{}, {}, RegisterUserDto>, res: Response<UserResponseDto>) => {
-  const { username, email, password } = req.body
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const user = await User.create({
-      username,
-      email,
-      password: hashedPassword,
-      isAdmin: false,
-    })
-    res.status(201).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    })
-  } catch (error: any) {
-    res.status(500).json({ message: error.message } as any)
+  // 회원가입
+  @Post('/register')
+  async registerUser(@Body() body: RegisterUserDto) {
+    try {
+      const user = await this.userService.createUser(body.username, body.email, body.password)
+      return apiSuccess({ id: user.id, username: user.username, email: user.email })
+    } catch (error: any) {
+      return apiFail('회원가입 실패', error.message)
+    }
   }
-}
 
-// 로그인
-export const loginUser = async (req: Request<{}, {}, LoginUserDto>, res: Response) => {
-  const { email, password } = req.body
-  try {
-    const user = await User.findOne({ where: { email } })
-    if (!user) return res.status(401).json({ message: '이메일 또는 비밀번호가 틀림' })
+  // 로그인
+  @Post('/login')
+  async loginUser(@Body() body: LoginUserDto) {
+    try {
+      const user = await this.userService.loginUser(body.email, body.password)
+      if (!user) return apiFail('이메일 또는 비밀번호가 틀림', null)
 
-    const isMatch = await bcrypt.compare(password, user.password)
-    if (!isMatch) return res.status(401).json({ message: '이메일 또는 비밀번호가 틀림' })
-
-    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET 미설정')
-
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: '1d',
-    })
-
-    res.json({ token })
-  } catch (error: any) {
-    res.status(500).json({ message: error.message })
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' })
+      return apiSuccess({ token })
+    } catch (error: any) {
+      return apiFail('로그인 실패', error.message)
+    }
   }
 }

@@ -1,28 +1,31 @@
-import express, { Application, Request, Response } from "express";
-import morgan from "morgan";
-import dotenv from "dotenv";
-import sequelize from "db"; // DB 연결 파일
-// import userRoutes from "./routes/userRoutes";
+import 'reflect-metadata'
+import { createExpressServer, useContainer, Action } from 'routing-controllers'
+import { UserController } from '@api/user/controller/user.controller'
+import { Container } from 'typedi'
+import jwt from 'jsonwebtoken'
+import User from '@models/User'
 
-dotenv.config();
+// DI 컨테이너 연결
+useContainer(Container)
 
-const app: Application = express();
+const app = createExpressServer({
+  controllers: [UserController],
+  authorizationChecker: async (action: Action, roles: string[]) => {
+    const token = action.request.headers['authorization']?.split(' ')[1]
+    if (!token) return false
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!)
+      if (!decoded) return false
 
-// ✅ DB 연결 확인
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("✅ Database connection established successfully.");
-  } catch (error) {
-    console.error("❌ Unable to connect to the database:", error);
-  }
-})();
+      if (roles.includes('admin')) {
+        const user = await User.findByPk(decoded.id)
+        return !!user?.isAdmin
+      }
+      return true
+    } catch {
+      return false
+    }
+  },
+})
 
-// ✅ 미들웨어
-app.use(express.json());
-app.use(morgan("dev"));
-
-// ✅ 라우트
-// app.use("/api/users", userRoutes);
-
-export default app;
+export default app

@@ -1,20 +1,11 @@
-import express, { Express } from 'express'
+// src/server.ts
 import dotenv from 'dotenv'
-import userRoutes from '@api/user/routes'
 import sequelize from 'db'
+import app from './app'
 
 dotenv.config()
 
-const app: Express = express()
-
-// 미들웨어
-app.use(express.json())
-
-// 라우트
-app.use('/api/users', userRoutes)
-
-// 서버 실행
-const PORT: number = parseInt(process.env.PORT || '5000', 10)
+const PORT = parseInt(process.env.PORT || '5000', 10)
 
 app.listen(PORT, async () => {
   try {
@@ -23,6 +14,5 @@ app.listen(PORT, async () => {
   } catch (error: any) {
     console.log('❌ DB 연결 실패:', error.message)
   }
-
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 })
