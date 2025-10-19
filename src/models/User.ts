@@ -1,9 +1,23 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Model } from "sequelize";
 import sequelize from "db.js";
 import bcrypt from "bcryptjs";
+import { UserAttributes, UserCreationAttributes } from "types/user.js";
 
-const User = sequelize.define(
-  "User",
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
+  public id!: number;
+  public username!: string;
+  public email!: string;
+  public password!: string;
+  public isAdmin!: boolean;
+
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+User.init(
   {
     id: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -30,10 +44,11 @@ const User = sequelize.define(
     },
   },
   {
+    sequelize,
     tableName: "users",
     timestamps: true,
     hooks: {
-      beforeCreate: async (user) => {
+      beforeCreate: async (user: User) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       },
