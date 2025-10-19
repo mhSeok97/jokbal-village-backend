@@ -5,7 +5,8 @@
       "@api/*": ["api/*"],
       "@models/*": ["models/*"],
       "@middleware/*": ["middleware/*"],
-      "@types/*": ["types/*"]
+      "@types/*": ["types/*"],
+      "@config/*": ["config/*"]
     }
   }
 }

@@ -1,6 +1,5 @@
-// src/server.ts
 import dotenv from 'dotenv'
-import sequelize from 'db'
+import sequelize from 'config/mysql.config'
 import app from './app'
 
 dotenv.config()

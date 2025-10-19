@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize'
-import sequelize from 'db'
+import sequelize from 'config/mysql.config'
 import bcrypt from 'bcryptjs'
 import { UserAttributes, UserCreationAttributes } from '@api/user/dto/user.dto'
 
