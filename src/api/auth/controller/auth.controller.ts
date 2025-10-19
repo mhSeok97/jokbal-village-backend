@@ -1,39 +1,45 @@
+// src/api/auth/controller/auth.controller.ts
 import { JsonController, Post, Body, Req, Res } from 'routing-controllers'
 import { Service } from 'typedi'
 import type { Request, Response } from 'express'
-import { AuthService } from '@api/auth/service/auth.service'
-import { LoginDto } from '@api/auth/dto/auth.dto'
-import { apiSuccess, apiFail } from '@api/common/dto/api-util.dto'
+import { AuthService } from 'api/auth/service/auth.service'
+import { LoginRequestDto } from 'api/user/dto/user.dto'
+import { apiSuccess, apiFail } from 'api/common/dto/api-util.dto'
+import { plainToInstance } from 'class-transformer'
+import { UserResponseDto } from 'api/user/dto/user.dto'
 
 @Service()
 @JsonController('/auth')
 export class AuthController {
   private static readonly REFRESH_COOKIE = 'rv'
   private static readonly isProd = process.env.NODE_ENV === 'production'
-  private static readonly cookiePath = '/api/auth' // 쿠키가 전송될 경로 범위 제한
+  private static readonly cookiePath = '/api/auth' // 쿠키 전송 경로 제한
 
   constructor(private readonly auth: AuthService) {}
 
   /** 로그인: access 반환, refresh는 httpOnly 쿠키로 설정 */
   @Post('/login')
-  async login(@Body() body: LoginDto, @Req() req: Request, @Res() res: Response) {
+  async login(@Body() body: LoginRequestDto, @Req() req: Request, @Res() res: Response) {
     try {
+      // 프록시 환경이면 app.set('trust proxy', 1) 설정 권장
       const ua = String(req.headers['user-agent'] || '')
-      const ip = req.ip
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || req.ip
 
       const { access, refresh, user } = await this.auth.login(body.email, body.password, ua, ip)
 
-      // 리프레시를 httpOnly 쿠키로
-      const refreshExp = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 프론트 만료 힌트용
+      // refresh 쿠키 설정
+      const refreshExp = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
       res.cookie(AuthController.REFRESH_COOKIE, refresh, {
         httpOnly: true,
         secure: AuthController.isProd,
         sameSite: 'lax',
         path: AuthController.cookiePath,
         expires: refreshExp,
+        // domain: process.env.COOKIE_DOMAIN, // 필요한 경우만
       })
 
-      return res.json(apiSuccess({ accessToken: access, user: { id: user.id, email: user.email } }))
+      const safeUser = plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true })
+      return res.json(apiSuccess({ accessToken: access, user: safeUser }))
     } catch (e: any) {
       return res.status(401).json(apiFail('로그인 실패', e.message))
     }
@@ -46,14 +52,15 @@ export class AuthController {
       const refreshCookie = req.cookies?.[AuthController.REFRESH_COOKIE]
       if (!refreshCookie) return res.status(401).json(apiFail('리프레시 쿠키 없음', null))
 
-      // CSRF 최소 방어: 필요 시 허용 Origin 화이트리스트 체크
+      // (옵션) CSRF 최소 방어: 허용 Origin 화이트리스트
       const origin = String(req.headers.origin || '')
       if (process.env.ALLOWED_ORIGIN && !origin.startsWith(process.env.ALLOWED_ORIGIN)) {
         return res.status(403).json(apiFail('Origin not allowed', null))
       }
 
       const ua = String(req.headers['user-agent'] || '')
-      const ip = req.ip
+      const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || req.ip
+
       const { access, refresh, expires } = await this.auth.rotate(refreshCookie, ua, ip)
 
       // 새 리프레시로 교체(로테이션)
@@ -63,6 +70,7 @@ export class AuthController {
         sameSite: 'lax',
         path: AuthController.cookiePath,
         expires,
+        // domain: process.env.COOKIE_DOMAIN,
       })
 
       return res.json(apiSuccess({ accessToken: access }))

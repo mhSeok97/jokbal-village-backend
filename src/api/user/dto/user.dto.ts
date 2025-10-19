@@ -1,46 +1,69 @@
-export interface UserAttributes {
-  id: number
-  username: string
-  email: string
-  password: string
-  isAdmin: boolean
+import { IsEmail, IsString, IsBoolean, IsOptional, MinLength, MaxLength } from 'class-validator'
+import { Exclude, Expose } from 'class-transformer'
+
+export class RegisterRequestDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  username!: string
+
+  @IsEmail()
+  email!: string
+
+  @IsString()
+  @MinLength(4)
+  @MaxLength(255)
+  password!: string
 }
 
-export interface UserCreationAttributes {
-  username: string
-  email: string
-  password: string
+export class LoginRequestDto {
+  @IsEmail()
+  email!: string
+
+  @IsString()
+  @MinLength(4)
+  @MaxLength(255)
+  password!: string
+}
+
+export class CreateUserInput {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  username!: string
+
+  @IsEmail()
+  email!: string
+
+  @IsString()
+  @MinLength(4)
+  @MaxLength(255)
+  password!: string
+
+  @IsOptional()
+  @IsBoolean()
   isAdmin?: boolean
-  id?: number
 }
 
-export interface RegisterUserDto {
-  username: string
-  email: string
-  password: string
-}
+@Exclude()
+export class UserResponseDto {
+  @Expose()
+  id!: number
 
-export interface LoginUserDto {
-  email: string
-  password: string
-}
+  @Expose()
+  username!: string
 
-export interface UserResponseDto {
-  id: number
-  username: string
-  email: string
-  isAdmin: boolean
+  @Expose()
+  email!: string
+
+  @Expose()
+  isAdmin!: boolean
+
+  @Expose()
+  @IsOptional()
   createdAt?: Date
+
+  @Expose()
+  @IsOptional()
   updatedAt?: Date
-}
-
-export interface LoginRequestDto {
-  email: string
-  password: string
-}
-
-export interface RegisterRequestDto {
-  username: string
-  email: string
-  password: string
 }

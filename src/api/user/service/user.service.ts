@@ -1,33 +1,43 @@
-import User from '@models/User'
-import bcrypt from 'bcryptjs'
 import { Service } from 'typedi'
+import { AppDataSource } from 'data-source'
+import { User } from 'api/user/entity/user.entity'
 
 @Service()
 export class UserService {
+  private userRepo = AppDataSource.getRepository(User)
+
+  /** 전체 사용자 조회 (비밀번호 제외) */
   async findAllUsers() {
-    return User.findAll({ attributes: { exclude: ['password'] } })
+    return this.userRepo.find({
+      select: ['id', 'username', 'email', 'isAdmin', 'createdAt', 'updatedAt'],
+    })
   }
 
+  /** ID로 사용자 조회 (비밀번호 제외) */
   async findUserById(id: number) {
-    const user = await User.findByPk(id, { attributes: { exclude: ['password'] } })
+    const user = await this.userRepo.findOne({
+      where: { id },
+      select: ['id', 'username', 'email', 'isAdmin', 'createdAt', 'updatedAt'],
+    })
     if (!user) throw new Error('사용자 없음')
     return user
   }
 
+  /** 사용자 삭제 */
   async deleteUser(id: number) {
-    const user = await User.findByPk(id)
+    const user = await this.userRepo.findOne({ where: { id } })
     if (!user) throw new Error('사용자 없음')
-    await user.destroy()
+    await this.userRepo.remove(user)
   }
 
-  async createUser(username: string, email: string, password: string) {
-    const hashedPassword = await bcrypt.hash(password, 10)
-    return User.create({ username, email, password: hashedPassword, isAdmin: false })
-  }
-
-  async loginUser(email: string, password: string) {
-    const user = await User.findOne({ where: { email } })
-    if (user && (await bcrypt.compare(password, user.password))) return user
-    return null
-  }
+  // (선택) 사용자 정보 수정이 필요하면 주석 해제해 사용
+  // async updateUser(
+  //   id: number,
+  //   patch: Partial<Pick<User, "username" | "email" | "isAdmin">>
+  // ) {
+  //   const user = await this.userRepo.findOne({ where: { id } });
+  //   if (!user) throw new Error("사용자 없음");
+  //   Object.assign(user, patch);
+  //   return this.userRepo.save(user);
+  // }
 }

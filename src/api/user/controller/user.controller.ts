@@ -1,73 +1,50 @@
-import { JsonController, Get, Post, Delete, Param, Body, Authorized } from 'routing-controllers'
-import { UserService } from '@api/user/service/user.service'
-import { RegisterUserDto, LoginUserDto } from '../dto/user.dto'
-import { apiSuccess, apiFail } from '@api/common/dto/api-util.dto'
+import { JsonController, Get, Delete, Param, Authorized } from 'routing-controllers'
 import { Service } from 'typedi'
-import jwt from 'jsonwebtoken'
+import { UserService } from 'api/user/service/user.service'
+import { apiSuccess, apiFail } from 'api/common/dto/api-util.dto'
+import { plainToInstance } from 'class-transformer'
+import { UserResponseDto } from 'api/user/dto/user.dto'
 
 @Service()
 @JsonController('/users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
-  // 전체 사용자 조회 (관리자만)
+  /** 전체 사용자 조회 (관리자) */
   @Authorized('admin')
   @Get('/')
   async getAllUsers() {
     try {
       const users = await this.userService.findAllUsers()
-      return apiSuccess(users)
+      const data = plainToInstance(UserResponseDto, users, { excludeExtraneousValues: true })
+      return apiSuccess(data)
     } catch (error: any) {
-      return apiFail('전체 사용자 조회 실패', error.message)
+      return apiFail('전체 사용자 조회 실패', error?.message ?? String(error))
     }
   }
 
-  // 특정 사용자 조회 (관리자만)
+  /** 특정 사용자 조회 (관리자) */
   @Authorized('admin')
   @Get('/:id')
   async getUserById(@Param('id') id: number) {
     try {
-      const user = await this.userService.findUserById(id)
-      return apiSuccess(user)
+      const user = await this.userService.findUserById(Number(id))
+      const data = plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true })
+      return apiSuccess(data)
     } catch (error: any) {
-      return apiFail('사용자 조회 실패', error.message)
+      return apiFail('사용자 조회 실패', error?.message ?? String(error))
     }
   }
 
-  // 사용자 삭제 (관리자만)
+  /** 사용자 삭제 (관리자) */
   @Authorized('admin')
   @Delete('/:id')
   async deleteUser(@Param('id') id: number) {
     try {
-      await this.userService.deleteUser(id)
+      await this.userService.deleteUser(Number(id))
       return apiSuccess({ message: '사용자 삭제됨' })
     } catch (error: any) {
-      return apiFail('사용자 삭제 실패', error.message)
-    }
-  }
-
-  // 회원가입
-  @Post('/register')
-  async registerUser(@Body() body: RegisterUserDto) {
-    try {
-      const user = await this.userService.createUser(body.username, body.email, body.password)
-      return apiSuccess({ id: user.id, username: user.username, email: user.email })
-    } catch (error: any) {
-      return apiFail('회원가입 실패', error.message)
-    }
-  }
-
-  // 로그인
-  @Post('/login')
-  async loginUser(@Body() body: LoginUserDto) {
-    try {
-      const user = await this.userService.loginUser(body.email, body.password)
-      if (!user) return apiFail('이메일 또는 비밀번호가 틀림', null)
-
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' })
-      return apiSuccess({ token })
-    } catch (error: any) {
-      return apiFail('로그인 실패', error.message)
+      return apiFail('사용자 삭제 실패', error?.message ?? String(error))
     }
   }
 }

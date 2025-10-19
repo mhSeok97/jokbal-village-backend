@@ -1,17 +1,41 @@
+// src/server.ts
+import 'reflect-metadata'
 import dotenv from 'dotenv'
-import sequelize from 'config/mysql.config'
-import app from './app'
-
 dotenv.config()
+
+import { AppDataSource } from 'data-source'
+import app from './app'
 
 const PORT = parseInt(process.env.PORT || '5000', 10)
 
-app.listen(PORT, async () => {
+async function bootstrap() {
   try {
-    await sequelize.authenticate()
-    console.log('✅ DB 연결 성공')
+    await AppDataSource.initialize()
+    console.log('✅ DB 연결 성공 (TypeORM)')
+
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`)
+    })
+
+    const shutdown = async (signal: string) => {
+      console.log(`\n${signal} 수신, 종료 중...`)
+      server.close(async () => {
+        try {
+          if (AppDataSource.isInitialized) {
+            await AppDataSource.destroy()
+            console.log('🧹 DB 연결 정리 완료')
+          }
+        } finally {
+          process.exit(0)
+        }
+      })
+    }
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
   } catch (error: any) {
-    console.log('❌ DB 연결 실패:', error.message)
+    console.error('❌ DB 연결 실패:', error?.message ?? error)
+    process.exit(1)
   }
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-})
+}
+
+bootstrap()
