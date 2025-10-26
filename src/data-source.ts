@@ -13,5 +13,5 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: [User, RefreshToken],
   synchronize: false,
-  logging: false,
+  logging: ['query', 'error'],
 })

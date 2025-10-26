@@ -23,9 +23,9 @@ export class RefreshToken {
 
   /** 생성 시각 (TIMESTAMP DEFAULT CURRENT_TIMESTAMP) */
   @CreateDateColumn({
-    name: 'createdAt',
+    name: 'created_at',
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  createdAt!: Date
+  createdDt!: Date
 }

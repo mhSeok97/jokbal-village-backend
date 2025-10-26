@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 import { AppDataSource } from 'data-source'
 import { User } from 'api/user/entity/user.entity'
 import { RefreshToken } from 'api/auth/entity/refresh-token.entity'
-import { MoreThan } from 'typeorm'
+import { MoreThan, UsingJoinColumnIsNotAllowedError } from 'typeorm'
 
 type JwtAccessPayload = { id: number; isAdmin?: boolean }
 type JwtRefreshPayload = { id: number }
@@ -19,8 +19,13 @@ export class AuthService {
 
   /** 로그인: 비번 검증 → access(짧음) + refresh(김) 발급/저장(해시) */
   async login(email: string, password: string, userAgent?: string, ip?: string) {
-    // password가 select:false 라면 addSelect로 포함
-    const user = await this.userRepo.createQueryBuilder('u').addSelect('u.password').where('u.email = :email', { email }).getOne()
+    const emailTrimmed = email.trim()
+    const user = await this.userRepo
+      .createQueryBuilder('u')
+      .select(['u.id', 'u.email', 'u.isAdmin'])
+      .addSelect('u.password')
+      .where('u.email = :email', { email: emailTrimmed })
+      .getOne()
 
     if (!user) throw new Error('이메일 또는 비밀번호가 틀림')
 

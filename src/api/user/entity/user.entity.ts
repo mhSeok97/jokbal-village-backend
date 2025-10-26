@@ -1,4 +1,3 @@
-// src/entities/User.ts
 import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm'
 
 @Entity({ name: 'users' })
@@ -16,18 +15,18 @@ export class User {
   @Column({ type: 'varchar', length: 255, select: false })
   password!: string
 
-  @CreateDateColumn({ name: 'createdAt' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt!: Date
 
-  @UpdateDateColumn({ name: 'updatedAt' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
   updatedAt!: Date
 
   // Sequelize paranoid 대응 - Soft Delete
-  @DeleteDateColumn({ name: 'deletedDt', nullable: true })
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt?: Date | null
 
   @Column({
-    name: 'isAdmin',
+    name: 'is_admin',
     type: 'tinyint',
     width: 1,
     default: 0,
